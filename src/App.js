@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { CheckCircle, XCircle, RotateCcw, TrendingUp, Zap, Brain, Eye } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { CheckCircle, XCircle, RotateCcw, TrendingUp, Zap, Brain, Eye, ArrowLeft, ArrowRight, Star, Share2 } from 'lucide-react';
 
 const SlangQuiz = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -11,6 +11,8 @@ const SlangQuiz = () => {
   const [lastAnswer, setLastAnswer] = useState(null);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(true);
+  const [cardFlipped, setCardFlipped] = useState(false);
 
   const slangTerms = [
     // REAL Gen Z Terms
@@ -215,62 +217,13 @@ const SlangQuiz = () => {
       origin: "Refrigerators are cool temperature-wise",
       vibe: "linear-gradient(135deg, #3b82f6, #06b6d4)",
       emoji: "🧊"
-    },
-    {
-      term: "Keyboard Warrior",
-      definition: "Someone brave online but quiet in person",
-      isReal: false,
-      context: "Calling out internet tough guys",
-      example: "'He's such a keyboard warrior, won't say it IRL'",
-      origin: "Fighting battles only with keyboards",
-      vibe: "linear-gradient(135deg, #64748b, #6b7280)",
-      emoji: "⌨️"
-    },
-    {
-      term: "Screenshot Energy",
-      definition: "Something so iconic it deserves to be saved",
-      isReal: false,
-      context: "When a moment is perfectly capture-worthy",
-      example: "'This conversation has screenshot energy'",
-      origin: "Worth screenshotting for posterity",
-      vibe: "linear-gradient(135deg, #ec4899, #f43f5e)",
-      emoji: "📸"
-    },
-    {
-      term: "Bluetooth Mode",
-      definition: "When you're connected to someone mentally",
-      isReal: false,
-      context: "Perfect synchronization with a friend",
-      example: "'We're in bluetooth mode, thinking the same thing'",
-      origin: "Like wireless connection between devices",
-      vibe: "linear-gradient(135deg, #3b82f6, #6366f1)",
-      emoji: "📡"
-    },
-    {
-      term: "Buffering",
-      definition: "When your brain needs a moment to process",
-      isReal: false,
-      context: "Mental lag during conversations",
-      example: "'Wait, I'm buffering... what did you just say?'",
-      origin: "Like video buffering but for thoughts",
-      vibe: "linear-gradient(135deg, #f97316, #ef4444)",
-      emoji: "⏳"
-    },
-    {
-      term: "Airplane Mode",
-      definition: "Completely disconnecting from drama",
-      isReal: false,
-      context: "Intentionally avoiding toxic situations",
-      example: "'All this drama has me in airplane mode'",
-      origin: "Like turning off all connections",
-      vibe: "linear-gradient(135deg, #0ea5e9, #06b6d4)",
-      emoji: "✈️"
     }
   ];
 
   // Shuffle the array when component mounts
   const [shuffledTerms] = useState(() => [...slangTerms].sort(() => Math.random() - 0.5));
   const currentTerm = shuffledTerms[currentIndex];
+  const progress = ((currentIndex + 1) / shuffledTerms.length) * 100;
 
   const handleGuess = (guess) => {
     if (isAnimating || currentIndex >= shuffledTerms.length) return;
@@ -297,30 +250,33 @@ const SlangQuiz = () => {
       setIsAnimating(false);
       setShowResult(false);
       setLastAnswer(null);
-    }, 2000);
+      setCardFlipped(false);
+    }, 2500);
   };
 
-  const handleMouseDown = (e) => {
+  const handleTouchStart = (e) => {
     if (showResult) return;
     setIsDragging(true);
+    const touch = e.touches[0];
+    setDragOffset({ startX: touch.clientX, startY: touch.clientY, x: 0, y: 0 });
   };
 
-  const handleMouseMove = (e) => {
+  const handleTouchMove = (e) => {
     if (!isDragging || showResult) return;
-    const rect = e.currentTarget.getBoundingClientRect();
-    const centerX = rect.left + rect.width / 2;
-    const centerY = rect.top + rect.height / 2;
-    setDragOffset({
-      x: e.clientX - centerX,
-      y: e.clientY - centerY
-    });
+    e.preventDefault();
+    const touch = e.touches[0];
+    setDragOffset(prev => ({
+      ...prev,
+      x: touch.clientX - prev.startX,
+      y: touch.clientY - prev.startY
+    }));
   };
 
-  const handleMouseUp = () => {
+  const handleTouchEnd = () => {
     if (!isDragging || showResult) return;
     setIsDragging(false);
 
-    if (Math.abs(dragOffset.x) > 100) {
+    if (Math.abs(dragOffset.x) > 80) {
       handleGuess(dragOffset.x > 0);
     }
 
@@ -333,6 +289,7 @@ const SlangQuiz = () => {
     setStreak(0);
     setShowResult(false);
     setLastAnswer(null);
+    setCardFlipped(false);
   };
 
   const getEncouragement = () => {
@@ -344,313 +301,96 @@ const SlangQuiz = () => {
     return "Time to Touch Grass! 🌱";
   };
 
-  const styles = {
-    container: {
-      minHeight: '100vh',
-      background: 'linear-gradient(135deg, #581c87, #be185d, #4c1d95)',
-      padding: '16px'
-    },
-    maxWidthContainer: {
-      maxWidth: '28rem',
-      margin: '0 auto'
-    },
-    header: {
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      marginBottom: '16px',
-      color: 'white'
-    },
-    title: {
-      display: 'flex',
-      alignItems: 'center',
-      gap: '8px'
-    },
-    titleText: {
-      fontSize: '24px',
-      fontWeight: 'bold',
-      background: 'linear-gradient(to right, #06b6d4, #ec4899)',
-      WebkitBackgroundClip: 'text',
-      WebkitTextFillColor: 'transparent',
-      backgroundClip: 'text'
-    },
-    counter: {
-      fontSize: '14px',
-      backgroundColor: 'rgba(255, 255, 255, 0.1)',
-      borderRadius: '9999px',
-      padding: '4px 12px',
-      backdropFilter: 'blur(4px)'
-    },
-    statsContainer: {
-      display: 'flex',
-      gap: '16px',
-      textAlign: 'center',
-      color: 'rgba(255, 255, 255, 0.8)',
-      fontSize: '14px',
-      marginBottom: '24px'
-    },
-    statBox: {
-      flex: 1,
-      backgroundColor: 'rgba(255, 255, 255, 0.1)',
-      borderRadius: '12px',
-      padding: '12px',
-      backdropFilter: 'blur(4px)'
-    },
-    cardContainer: {
-      position: 'relative',
-      height: '384px',
-      marginBottom: '32px'
-    },
-    card: {
-      position: 'absolute',
-      inset: 0,
-      borderRadius: '24px',
-      padding: '4px',
-      boxShadow: '0 25px 50px rgba(0, 0, 0, 0.25)',
-      transform: 'scale(1)',
-      opacity: 1,
-      transition: 'all 0.3s ease',
-      cursor: 'grab'
-    },
-    cardAnimating: {
-      transform: 'scale(0.95)',
-      opacity: 0
-    },
-    cardInner: {
-      backgroundColor: 'rgba(0, 0, 0, 0.3)',
-      backdropFilter: 'blur(4px)',
-      borderRadius: '24px',
-      height: '100%',
-      padding: '24px',
-      color: 'white',
-      position: 'relative',
-      overflow: 'hidden'
-    },
-    resultOverlay: {
-      position: 'absolute',
-      inset: 0,
-      backgroundColor: 'rgba(0, 0, 0, 0.5)',
-      backdropFilter: 'blur(4px)',
-      borderRadius: '24px',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      zIndex: 20
-    },
-    backgroundPattern: {
-      position: 'absolute',
-      inset: 0,
-      opacity: 0.2
-    },
-    backgroundEmoji: {
-      fontSize: '200px',
-      position: 'absolute',
-      top: '-64px',
-      right: '-64px',
-      userSelect: 'none'
-    },
-    content: {
-      position: 'relative',
-      zIndex: 10,
-      height: '100%',
-      display: 'flex',
-      flexDirection: 'column'
-    },
-    termHeader: {
-      textAlign: 'center',
-      marginBottom: '24px'
-    },
-    emoji: {
-      fontSize: '48px',
-      marginBottom: '16px',
-      display: 'block'
-    },
-    termTitle: {
-      fontSize: '32px',
-      fontWeight: 'bold',
-      marginBottom: '8px'
-    },
-    definition: {
-      fontSize: '18px',
-      opacity: 0.9,
-      marginBottom: '16px'
-    },
-    example: {
-      fontSize: '14px',
-      opacity: 0.7,
-      fontStyle: 'italic'
-    },
-    questionSection: {
-      flex: 1,
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center'
-    },
-    questionContent: {
-      textAlign: 'center'
-    },
-    questionTitle: {
-      fontSize: '24px',
-      fontWeight: 'bold',
-      marginBottom: '16px'
-    },
-    questionSubtitle: {
-      fontSize: '14px',
-      opacity: 0.8
-    },
-    swipeIndicators: {
-      display: 'flex',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      textAlign: 'center',
-      fontSize: '12px',
-      opacity: 0.6
-    },
-    indicator: {
-      display: 'flex',
-      alignItems: 'center',
-      gap: '4px'
-    },
-    buttonContainer: {
-      display: 'flex',
-      justifyContent: 'center',
-      gap: '24px'
-    },
-    button: {
-      borderRadius: '50%',
-      padding: '16px',
-      transition: 'all 0.2s ease',
-      backdropFilter: 'blur(4px)',
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      gap: '4px',
-      border: '2px solid',
-      background: 'rgba(255, 255, 255, 0.1)',
-      cursor: 'pointer'
-    },
-    susButton: {
-      borderColor: '#ef4444',
-      color: '#ef4444'
-    },
-    realButton: {
-      borderColor: '#10b981',
-      color: '#10b981'
-    },
-    buttonText: {
-      fontSize: '12px',
-      fontWeight: '600'
-    },
-    ticker: {
-      position: 'fixed',
-      bottom: '16px',
-      left: '16px',
-      right: '16px',
-      textAlign: 'center'
-    },
-    tickerText: {
-      color: 'rgba(255, 255, 255, 0.6)',
-      fontSize: '14px'
-    },
-    finalScreen: {
-      backgroundColor: 'rgba(255, 255, 255, 0.1)',
-      backdropFilter: 'blur(20px)',
-      borderRadius: '24px',
-      padding: '32px',
-      textAlign: 'center',
-      border: '1px solid rgba(255, 255, 255, 0.2)'
-    },
-    finalEmoji: {
-      fontSize: '96px',
-      marginBottom: '24px'
-    },
-    finalTitle: {
-      fontSize: '32px',
-      fontWeight: 'bold',
-      color: 'white',
-      marginBottom: '8px'
-    },
-    finalScore: {
-      fontSize: '18px',
-      color: 'rgba(255, 255, 255, 0.8)',
-      marginBottom: '24px'
-    },
-    finalStatsContainer: {
-      display: 'flex',
-      flexDirection: 'column',
-      gap: '16px',
-      marginBottom: '32px'
-    },
-    finalStatBox: {
-      borderRadius: '12px',
-      padding: '16px',
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      gap: '8px'
-    },
-    streakBox: {
-      background: 'linear-gradient(to right, rgba(16, 185, 129, 0.2), rgba(5, 150, 105, 0.2))',
-      border: '1px solid rgba(16, 185, 129, 0.3)'
-    },
-    accuracyBox: {
-      background: 'linear-gradient(to right, rgba(59, 130, 246, 0.2), rgba(6, 182, 212, 0.2))',
-      border: '1px solid rgba(59, 130, 246, 0.3)'
-    },
-    resetButton: {
-      background: 'linear-gradient(to right, #7c3aed, #ec4899)',
-      color: 'white',
-      fontWeight: 'bold',
-      padding: '12px 32px',
-      borderRadius: '9999px',
-      border: 'none',
-      cursor: 'pointer',
-      display: 'flex',
-      alignItems: 'center',
-      gap: '8px',
-      margin: '0 auto',
-      transition: 'transform 0.2s ease'
-    },
-    shareText: {
-      color: 'rgba(255, 255, 255, 0.6)',
-      fontSize: '14px',
-      marginTop: '16px'
-    }
-  };
-
-  if (currentIndex >= shuffledTerms.length) {
+  // Onboarding Component
+  if (showOnboarding) {
     return (
-      <div style={styles.container}>
-        <div style={{ ...styles.maxWidthContainer, display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>
-          <div style={styles.finalScreen}>
-            <div style={styles.finalEmoji}>🎯</div>
-            <h2 style={styles.finalTitle}>{getEncouragement()}</h2>
-            <div style={styles.finalScore}>
-              You scored {score} out of {shuffledTerms.length}!
-            </div>
-
-            <div style={styles.finalStatsContainer}>
-              <div style={{ ...styles.finalStatBox, ...styles.streakBox }}>
-                <Zap size={24} color="#10b981" />
-                <p style={{ color: '#10d97a', fontWeight: '600', margin: 0 }}>Best Streak: {bestStreak}</p>
+      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-pink-600 to-purple-800 p-4 flex items-center justify-center">
+        <div className="max-w-sm mx-auto">
+          <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl p-8 text-center text-white">
+            <div className="text-6xl mb-6">🎯</div>
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-cyan-400 to-pink-400 bg-clip-text text-transparent mb-4">
+              SlangCheck
+            </h1>
+            <p className="text-lg opacity-90 mb-6">
+              Test your Gen Z slang knowledge! Can you spot the fake terms?
+            </p>
+            
+            <div className="space-y-4 mb-8">
+              <div className="flex items-center gap-3 text-left">
+                <ArrowLeft className="text-red-400" size={20} />
+                <span className="text-sm">Swipe left or tap ❌ for fake slang</span>
               </div>
-              <div style={{ ...styles.finalStatBox, ...styles.accuracyBox }}>
-                <Brain size={24} color="#3b82f6" />
-                <p style={{ color: '#60a5fa', fontWeight: '600', margin: 0 }}>{Math.round((score/shuffledTerms.length)*100)}% Accuracy</p>
+              <div className="flex items-center gap-3 text-left">
+                <ArrowRight className="text-green-400" size={20} />
+                <span className="text-sm">Swipe right or tap ✅ for real slang</span>
+              </div>
+              <div className="flex items-center gap-3 text-left">
+                <Star className="text-yellow-400" size={20} />
+                <span className="text-sm">Build streaks for bonus points!</span>
               </div>
             </div>
 
             <button
-              onClick={resetQuiz}
-              style={styles.resetButton}
-              onMouseEnter={(e) => e.target.style.transform = 'scale(1.05)'}
-              onMouseLeave={(e) => e.target.style.transform = 'scale(1)'}
+              onClick={() => setShowOnboarding(false)}
+              className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-bold py-4 px-8 rounded-2xl transition-all duration-200 transform hover:scale-105"
             >
-              <RotateCcw size={20} />
-              Play Again
+              Start Quiz 🚀
             </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
-            <p style={styles.shareText}>Share your score and challenge your friends!</p>
+  if (currentIndex >= shuffledTerms.length) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-pink-600 to-purple-800 p-4 flex items-center justify-center">
+        <div className="max-w-sm mx-auto">
+          <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl p-8 text-center text-white">
+            <div className="text-8xl mb-6 animate-bounce">🎯</div>
+            <h2 className="text-3xl font-bold mb-2">{getEncouragement()}</h2>
+            <div className="text-xl opacity-80 mb-8">
+              You scored {score} out of {shuffledTerms.length}!
+            </div>
+
+            <div className="grid grid-cols-2 gap-4 mb-8">
+              <div className="bg-gradient-to-r from-green-500/20 to-emerald-500/20 border border-green-500/30 rounded-2xl p-4">
+                <Zap className="mx-auto mb-2 text-green-400" size={24} />
+                <p className="text-green-400 font-bold text-lg">{bestStreak}</p>
+                <p className="text-xs opacity-80">Best Streak</p>
+              </div>
+              <div className="bg-gradient-to-r from-blue-500/20 to-cyan-500/20 border border-blue-500/30 rounded-2xl p-4">
+                <Brain className="mx-auto mb-2 text-blue-400" size={24} />
+                <p className="text-blue-400 font-bold text-lg">{Math.round((score/shuffledTerms.length)*100)}%</p>
+                <p className="text-xs opacity-80">Accuracy</p>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <button
+                onClick={resetQuiz}
+                className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-bold py-4 px-6 rounded-2xl transition-all duration-200 transform hover:scale-105 flex items-center justify-center gap-2"
+              >
+                <RotateCcw size={20} />
+                Play Again
+              </button>
+              
+              <button
+                onClick={() => {
+                  const shareText = `I scored ${score}/${shuffledTerms.length} on SlangCheck! 🎯 Can you beat my ${Math.round((score/shuffledTerms.length)*100)}% accuracy? Test your Gen Z slang knowledge!`;
+                  if (navigator.share) {
+                    navigator.share({ text: shareText });
+                  } else {
+                    navigator.clipboard.writeText(shareText);
+                    alert('Score copied to clipboard!');
+                  }
+                }}
+                className="w-full bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold py-3 px-6 rounded-2xl transition-all duration-200 flex items-center justify-center gap-2"
+              >
+                <Share2 size={18} />
+                Share Score
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -658,65 +398,79 @@ const SlangQuiz = () => {
   }
 
   return (
-    <div style={styles.container}>
-      <div style={styles.maxWidthContainer}>
+    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-pink-600 to-purple-800 p-4">
+      <div className="max-w-sm mx-auto">
         {/* Header */}
-        <div style={{ marginBottom: '24px' }}>
-          <div style={styles.header}>
-            <div style={styles.title}>
-              <Eye size={32} color="#06b6d4" />
-              <h1 style={styles.titleText}>SlangCheck</h1>
+        <div className="mb-6">
+          <div className="flex items-center justify-between mb-4 text-white">
+            <div className="flex items-center gap-2">
+              <Eye size={28} className="text-cyan-400" />
+              <h1 className="text-2xl font-bold bg-gradient-to-r from-cyan-400 to-pink-400 bg-clip-text text-transparent">
+                SlangCheck
+              </h1>
             </div>
-            <div style={styles.counter}>
+            <div className="bg-white/10 backdrop-blur-md rounded-full px-3 py-1 text-sm border border-white/20">
               {currentIndex + 1} / {shuffledTerms.length}
             </div>
           </div>
 
-          <div style={styles.statsContainer}>
-            <div style={styles.statBox}>
-              <TrendingUp size={20} color="#10b981" style={{ margin: '0 auto 4px' }} />
-              <p style={{ fontWeight: '600', color: '#10d97a', margin: 0 }}>{score}</p>
-              <p style={{ margin: 0 }}>Correct</p>
+          {/* Progress Bar */}
+          <div className="w-full bg-white/10 rounded-full h-2 mb-4 backdrop-blur-md border border-white/20">
+            <div 
+              className="h-2 rounded-full bg-gradient-to-r from-cyan-400 to-pink-400 transition-all duration-500 ease-out"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4 text-center text-white/80 text-sm">
+            <div className="bg-white/10 backdrop-blur-md rounded-xl p-3 border border-white/20">
+              <TrendingUp className="mx-auto mb-1 text-green-400" size={18} />
+              <p className="font-bold text-green-400 text-lg">{score}</p>
+              <p>Correct</p>
             </div>
-            <div style={styles.statBox}>
-              <Zap size={20} color="#eab308" style={{ margin: '0 auto 4px' }} />
-              <p style={{ fontWeight: '600', color: '#facc15', margin: 0 }}>{streak}</p>
-              <p style={{ margin: 0 }}>Streak</p>
+            <div className="bg-white/10 backdrop-blur-md rounded-xl p-3 border border-white/20">
+              <Zap className="mx-auto mb-1 text-yellow-400" size={18} />
+              <p className="font-bold text-yellow-400 text-lg">{streak}</p>
+              <p>Streak</p>
             </div>
           </div>
         </div>
 
         {/* Main Card */}
-        <div style={styles.cardContainer}>
+        <div className="relative h-96 mb-8">
           <div
+            className="absolute inset-0 rounded-3xl p-1 shadow-2xl transition-all duration-300 ease-out"
             style={{
-              ...styles.card,
-              ...(isAnimating ? styles.cardAnimating : {}),
               background: currentTerm.vibe,
-              transform: isDragging ? `translate(${dragOffset.x}px, ${dragOffset.y}px) rotate(${dragOffset.x * 0.1}deg)` : (isAnimating ? 'scale(0.95)' : 'scale(1)'),
-              transition: isDragging ? 'none' : 'all 0.3s ease'
+              transform: isDragging 
+                ? `translate(${dragOffset.x}px, ${dragOffset.y * 0.5}px) rotate(${dragOffset.x * 0.05}deg) scale(${1 - Math.abs(dragOffset.x) * 0.0005})` 
+                : isAnimating ? 'scale(0.95)' : 'scale(1)',
+              transition: isDragging ? 'none' : 'all 0.3s ease-out',
+              opacity: isAnimating ? 0 : 1
             }}
-            onMouseDown={handleMouseDown}
-            onMouseMove={handleMouseMove}
-            onMouseUp={handleMouseUp}
-            onMouseLeave={handleMouseUp}
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
           >
-            <div style={styles.cardInner}>
+            <div className="bg-black/20 backdrop-blur-md h-full rounded-3xl p-6 text-white relative overflow-hidden border border-white/10">
+              
               {/* Result Overlay */}
               {showResult && (
-                <div style={styles.resultOverlay}>
-                  <div style={{ textAlign: 'center' }}>
+                <div className="absolute inset-0 bg-black/60 backdrop-blur-sm rounded-3xl flex items-center justify-center z-20 animate-in fade-in duration-300">
+                  <div className="text-center">
                     {lastAnswer.correct ? (
                       <>
-                        <CheckCircle size={64} color="#10b981" style={{ margin: '0 auto 16px' }} />
-                        <p style={{ fontSize: '24px', fontWeight: 'bold', color: '#10d97a', margin: '0 0 8px' }}>Nailed it! 🔥</p>
-                        <p style={{ color: 'rgba(255, 255, 255, 0.8)', margin: 0 }}>You know your slang!</p>
+                        <div className="text-6xl mb-4 animate-bounce">🎉</div>
+                        <CheckCircle size={48} className="mx-auto mb-4 text-green-400" />
+                        <p className="text-2xl font-bold text-green-400 mb-2">Nailed it!</p>
+                        <p className="text-white/80">You know your slang! 🔥</p>
                       </>
                     ) : (
                       <>
-                        <XCircle size={64} color="#ef4444" style={{ margin: '0 auto 16px' }} />
-                        <p style={{ fontSize: '24px', fontWeight: 'bold', color: '#f87171', margin: '0 0 8px' }}>Not quite! 😅</p>
-                        <p style={{ color: 'rgba(255, 255, 255, 0.8)', margin: 0 }}>
+                        <div className="text-6xl mb-4 animate-pulse">😅</div>
+                        <XCircle size={48} className="mx-auto mb-4 text-red-400" />
+                        <p className="text-2xl font-bold text-red-400 mb-2">Not quite!</p>
+                        <p className="text-white/80 text-sm px-4">
                           This one is {lastAnswer.term.isReal ? 'actually real' : 'totally made up'}!
                         </p>
                       </>
@@ -726,37 +480,35 @@ const SlangQuiz = () => {
               )}
 
               {/* Background Pattern */}
-              <div style={styles.backgroundPattern}>
-                <div style={styles.backgroundEmoji}>
-                  {currentTerm.emoji}
-                </div>
+              <div className="absolute top-0 right-0 text-8xl opacity-20 select-none pointer-events-none">
+                {currentTerm.emoji}
               </div>
 
-              {/* Content */}
-              <div style={styles.content}>
-                <div style={styles.termHeader}>
-                  <span style={styles.emoji}>{currentTerm.emoji}</span>
-                  <h2 style={styles.termTitle}>{currentTerm.term}</h2>
-                  <p style={styles.definition}>"{currentTerm.definition}"</p>
-                  <p style={styles.example}>{currentTerm.example}</p>
+              {/* Card Content */}
+              <div className="relative z-10 h-full flex flex-col">
+                <div className="text-center mb-6">
+                  <div className="text-4xl mb-3">{currentTerm.emoji}</div>
+                  <h2 className="text-2xl font-bold mb-2">{currentTerm.term}</h2>
+                  <p className="text-base opacity-90 mb-3">"{currentTerm.definition}"</p>
+                  <p className="text-sm opacity-70 italic">{currentTerm.example}</p>
                 </div>
 
-                <div style={styles.questionSection}>
-                  <div style={styles.questionContent}>
-                    <h3 style={styles.questionTitle}>Real or Sus? 🤔</h3>
-                    <p style={styles.questionSubtitle}>Is this actually Gen Z slang?</p>
+                <div className="flex-1 flex items-center justify-center">
+                  <div className="text-center">
+                    <h3 className="text-xl font-bold mb-2">Real or Sus? 🤔</h3>
+                    <p className="text-sm opacity-80">Is this actually Gen Z slang?</p>
                   </div>
                 </div>
 
                 {/* Swipe Indicators */}
-                <div style={styles.swipeIndicators}>
-                  <div style={{ ...styles.indicator, color: '#ef4444' }}>
-                    <XCircle size={16} />
-                    <span>Sus (Fake)</span>
+                <div className="flex justify-between items-center text-xs opacity-60">
+                  <div className={`flex items-center gap-1 transition-all duration-200 ${dragOffset.x < -30 ? 'opacity-100 scale-110 text-red-400' : ''}`}>
+                    <XCircle size={14} />
+                    <span>Sus</span>
                   </div>
-                  <div style={{ ...styles.indicator, color: '#10b981' }}>
+                  <div className={`flex items-center gap-1 transition-all duration-200 ${dragOffset.x > 30 ? 'opacity-100 scale-110 text-green-400' : ''}`}>
                     <span>Real</span>
-                    <CheckCircle size={16} />
+                    <CheckCircle size={14} />
                   </div>
                 </div>
               </div>
@@ -765,36 +517,30 @@ const SlangQuiz = () => {
         </div>
 
         {/* Action Buttons */}
-        <div style={styles.buttonContainer}>
+        <div className="flex justify-center gap-8">
           <button
             onClick={() => handleGuess(false)}
-            style={{ ...styles.button, ...styles.susButton }}
             disabled={isAnimating || showResult}
-            onMouseEnter={(e) => !e.target.disabled && (e.target.style.transform = 'scale(1.1)')}
-            onMouseLeave={(e) => e.target.style.transform = 'scale(1)'}
+            className="bg-red-500/20 hover:bg-red-500/30 border border-red-500/40 text-red-400 rounded-full p-4 transition-all duration-200 transform hover:scale-110 active:scale-95 disabled:opacity-50 disabled:hover:scale-100 backdrop-blur-md"
           >
-            <XCircle size={32} />
-            <span style={styles.buttonText}>Sus</span>
+            <XCircle size={28} />
           </button>
 
           <button
             onClick={() => handleGuess(true)}
-            style={{ ...styles.button, ...styles.realButton }}
             disabled={isAnimating || showResult}
-            onMouseEnter={(e) => !e.target.disabled && (e.target.style.transform = 'scale(1.1)')}
-            onMouseLeave={(e) => e.target.style.transform = 'scale(1)'}
+            className="bg-green-500/20 hover:bg-green-500/30 border border-green-500/40 text-green-400 rounded-full p-4 transition-all duration-200 transform hover:scale-110 active:scale-95 disabled:opacity-50 disabled:hover:scale-100 backdrop-blur-md"
           >
-            <CheckCircle size={32} />
-            <span style={styles.buttonText}>Real</span>
+            <CheckCircle size={28} />
           </button>
         </div>
-      </div>
 
-      {/* Fun Stats Ticker */}
-      <div style={styles.ticker}>
-        <p style={styles.tickerText}>
-          Test your Gen Z fluency • Can you spot the fake slang? • Challenge your friends!
-        </p>
+        {/* Helpful Tip */}
+        <div className="mt-6 text-center">
+          <p className="text-white/60 text-xs">
+            💡 Swipe cards left/right or use buttons • Challenge your friends!
+          </p>
+        </div>
       </div>
     </div>
   );
